@@ -10,22 +10,25 @@ public class ImageSwitcher : MonoBehaviour
     public Sprite[] sprites; // [0] = Broken Pig, [1] = Coin, [2] = Golden Bar, [3] = Treasure
     public double balance;
     public TextMeshProUGUI balanceText;
+    public TextMeshProUGUI insufficientFunds;
     public double bet;
 
     public LineRenderer linePrefab; // Prefab for LineRenderer
     public List<LineRenderer> activeLines = new List<LineRenderer>(); // Keep track of active lines
 
-    public int numberOfRows = 3; // Adjust the number of rows
+    public int numberOfRows = 4; // Adjust the number of rows
     public int numberOfColumns = 3; // Adjust the number of columns
 
     // Updated probabilities with the Broken Pig as the most common element
-    private int[] probabilities = { 5, 45, 30, 20 }; // Broken Pig (40%), Coin (30%), Golden Bar (20%), Treasure Chest (10%)
+    private int[] probabilities = { 50, 25, 15, 10 }; // Broken Pig (40%), Coin (30%), Golden Bar (20%), Treasure Chest (10%)
+
+     // Reference to the BetSelector script
+    public BetSelector betSelector; 
 
     void Start()
     {
-        balance = 150;
-        bet = 5;
-
+        insufficientFunds.gameObject.SetActive(false);
+        balance = 100;
         balanceText.text = "Saldo: R$" + balance;
 
         // Initialize all image components with the broken pig (neutral sprite)
@@ -40,9 +43,13 @@ public class ImageSwitcher : MonoBehaviour
 
     public void Spin()
     {
+        bet = betSelector.GetCurrentBet();
         bool hasBalance = checkBalance();
         if (hasBalance)
         {
+            if(insufficientFunds.gameObject.activeSelf){
+                insufficientFunds.gameObject.SetActive(false);
+            }
             updateBalance(-bet);
 
             // Set random sprites based on weighted probabilities
@@ -64,7 +71,10 @@ public class ImageSwitcher : MonoBehaviour
         }
         else
         {
-            balanceText.text = "Perdeu tudo mané";
+            if(bet == 0.2){
+                insufficientFunds.text = "Perdeu tudo mané";
+            }
+            insufficientFunds.gameObject.SetActive(true);
         }
     }
 
@@ -249,10 +259,11 @@ public class ImageSwitcher : MonoBehaviour
         activeLines.Clear();
     }
 
-    private void updateBalance(double profitOrLoss)
-    {
-        balance += profitOrLoss;
-        balanceText.text = "Balance: R$" + balance;
-        Debug.Log("Current balance: R$" + balance);
-    }
+private void updateBalance(double profitOrLoss)
+{
+    balance += profitOrLoss;
+    balanceText.text = "Balance: R$" + balance.ToString("F2"); // Ensures 2 decimal places
+    Debug.Log("Current balance: R$" + balance.ToString("F2")); // Also log with 2 decimal places
+}
+
 }
